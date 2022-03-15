@@ -77,15 +77,18 @@ module Vacuum where
     type VacuumIndex = (RowIndex, RowIndex)
 
     --TODO this will not always be accurate
-    checkForDirt :: (VacuumIndex, World) -> Bool
+    checkForDirt :: (Maybe VacuumIndex, World) -> Bool
     checkForDirt (v, w) =
-        case indexWorld (v, w) of
+        --???
+        Nothing, _ -> False
+        case indexWorld (Just v, w) of
             Nothing -> False
             Just Dirt -> True
 
     --how do i know if valid index?
     checkAdjacent :: (VacuumIndex, World) -> [Bool]
     checkAdjacent (v, w) = undefined
+    -- fold checkfordirt over every adj, what about Nothing?
         --1 N
         --2 E
         --3 S
