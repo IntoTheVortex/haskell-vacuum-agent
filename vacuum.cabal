@@ -1,0 +1,30 @@
+cabal-version: 2.4
+
+name: vacuum
+version: 0.0.0.1
+
+library
+  exposed-modules: Vacuum
+  default-extensions: GADTSyntax
+  build-depends: base >= 4.11 && <5
+  hs-source-dirs: src
+  default-language: Haskell2010
+
+  ghc-options:
+    -fwarn-incomplete-patterns
+    -fwarn-incomplete-uni-patterns
+    -Werror
+    -O2
+
+executable vacuum
+    main-is: Main.hs
+    default-extensions: GADTSyntax
+    build-depends: base >= 4.11 && <5
+    hs-source-dirs: app
+    default-language: Haskell2010
+
+    ghc-options:
+      -fwarn-incomplete-patterns
+      -fwarn-incomplete-uni-patterns
+      -Werror
+      -O2
