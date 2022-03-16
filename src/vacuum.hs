@@ -75,48 +75,37 @@ module Vacuum where
 
     type VacuumIndex = (RowIndex, RowIndex)
 
-    --TODO this will not always be accurate
-    checkForDirt :: (Maybe VacuumIndex, World) -> Bool
-    checkForDirt (v, w) = undefined
-
-    --how do i know if valid index?
-    --checkAdjacent :: (VacuumIndex, World) -> [Bool]
-    checkAdjacent :: (VacuumIndex, World) -> [Maybe VacuumIndex]
-    checkAdjacent (v, w) =
-        [getNorth (v, w), getEast (v, w), getSouth (v, w), getWest (v, w)]
-    --checkAdjacent (v, w) = undefined
-    -- fold checkfordirt over every adj, what about Nothing?
-        --1 N --2 E --3 S --4 W
 
     --only get index if there's dirt
+    --TODO this will not always be accurate
     getNorth :: (VacuumIndex, World) -> Maybe VacuumIndex
     getNorth ((C0, i), w) = Nothing
     getNorth ((C1, i), w) =
         case indexWorld ((C0, i), w) of
             Just Dirt -> Just (C0, i)
             Nothing -> Nothing
-    getNorth ((C2, i), w) = 
+    getNorth ((C2, i), w) =
         case indexWorld ((C1, i), w) of
             Just Dirt -> Just (C1, i)
             Nothing -> Nothing
 
     getEast :: (VacuumIndex, World) -> Maybe VacuumIndex
-    getEast ((i, C0), w) = 
+    getEast ((i, C0), w) =
         case indexWorld ((i, C1), w) of
             Just Dirt -> Just (i, C1)
             Nothing -> Nothing
-    getEast ((i, C1), w) = 
+    getEast ((i, C1), w) =
         case indexWorld ((i, C2), w) of
             Just Dirt -> Just (i, C2)
             Nothing -> Nothing
     getEast ((i, C2), w) = Nothing
 
     getSouth :: (VacuumIndex, World) -> Maybe VacuumIndex
-    getSouth ((C0, i), w) = 
+    getSouth ((C0, i), w) =
         case indexWorld ((C1, i), w) of
             Just Dirt -> Just (C1, i)
             Nothing -> Nothing
-    getSouth ((C1, i), w) = 
+    getSouth ((C1, i), w) =
         case indexWorld ((C2, i), w) of
             Just Dirt -> Just (C2, i)
             Nothing -> Nothing
@@ -124,14 +113,52 @@ module Vacuum where
 
     getWest :: (VacuumIndex, World) -> Maybe VacuumIndex
     getWest ((i, C0), w) = Nothing
-    getWest ((i, C1), w) = 
+    getWest ((i, C1), w) =
         case indexWorld ((i, C0), w) of
             Just Dirt -> Just (i, C0)
             Nothing -> Nothing
-    getWest ((i, C2), w) = 
+    getWest ((i, C2), w) =
         case indexWorld ((i, C1), w) of
             Just Dirt -> Just (i, C1)
             Nothing -> Nothing
+
+    -- checks if the coords fed in are valid. if they are that means dirt
+        -- this should be called on results of checkAdj
+    checkedForDirt :: [Maybe VacuumIndex] -> [VacuumIndex]
+    checkedForDirt [] = []
+    checkedForDirt (Just x : xs) = x : checkedForDirt xs
+    checkedForDirt (Nothing : xs) = checkedForDirt xs
+
+    --how do i know if valid index?
+    --checkAdjacent :: (VacuumIndex, World) -> [Bool]
+    checkAdjacent :: (VacuumIndex, World) -> [Maybe VacuumIndex]
+    checkAdjacent (v, w) =
+        [getNorth (v, w), getEast (v, w), getSouth (v, w), getWest (v, w)]
+
+    cleanCurrentIfDirt :: (VacuumIndex, World) -> World
+    cleanCurrentIfDirt  (v, w) =
+        case indexWorld (v, w) of
+            Just Dirt -> cleanSquare (v, w)
+            Nothing -> w
+
+
+    --if no surrounding indexes have dirt, return the current index
+    chooseMoveBasic :: (VacuumIndex, World) -> VacuumIndex
+    chooseMoveBasic (v, w) = getFromList v (checkedForDirt (checkAdjacent (v, w)))
+
+    getFromList :: VacuumIndex -> [VacuumIndex] -> VacuumIndex
+    getFromList v l =
+        if null l then
+            v
+        else
+            head l
+
+    moveIndex :: (VacuumIndex, World) -> VacuumIndex
+    moveIndex (v, w) = undefined
+
+    robotMove :: (VacuumIndex, World) -> VacuumIndex
+    robotMove (v, w) = moveIndex (chooseMoveBasic (v, w), w)
+        --case chooseMoveBasic (v, w) of 
 
 
 
