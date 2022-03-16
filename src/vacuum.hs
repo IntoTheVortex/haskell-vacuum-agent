@@ -130,7 +130,6 @@ module Vacuum where
     checkedForDirt (Nothing : xs) = checkedForDirt xs
 
     --how do i know if valid index?
-    --checkAdjacent :: (VacuumIndex, World) -> [Bool]
     checkAdjacent :: (VacuumIndex, World) -> [Maybe VacuumIndex]
     checkAdjacent (v, w) =
         [getNorth (v, w), getEast (v, w), getSouth (v, w), getWest (v, w)]
@@ -153,12 +152,15 @@ module Vacuum where
         else
             head l
 
+    {--
     moveIndex :: (VacuumIndex, World) -> VacuumIndex
     moveIndex (v, w) = undefined
 
     robotMove :: (VacuumIndex, World) -> VacuumIndex
     robotMove (v, w) = moveIndex (chooseMoveBasic (v, w), w)
-        --case chooseMoveBasic (v, w) of 
+
+    ^^ don't need, choose move already checked for validity to just assign it
+    --}
 
 
 

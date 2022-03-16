@@ -18,10 +18,16 @@ library
 
 executable vacuum
     main-is: Main.hs
-    default-extensions: GADTSyntax
-    build-depends: base >= 4.11 && <5
     hs-source-dirs: app
     default-language: Haskell2010
+
+    default-extensions: GADTSyntax
+
+    build-depends: 
+      base >= 4.11 && <5,
+      filepath >=1.4.2.1 && <1.5,
+      vacuum
+      
 
     ghc-options:
       -fwarn-incomplete-patterns
