@@ -1,4 +1,8 @@
+{-# OPTIONS_GHC -Wno-unrecognised-pragmas #-}
+{-# HLINT ignore "Replace case with fromMaybe" #-}
 module Vacuum where
+
+    import System.Random (randomRIO)
 
     data Square where
         Dirt :: Square
@@ -75,64 +79,67 @@ module Vacuum where
 
     type VacuumIndex = (RowIndex, RowIndex)
 
+    initialPosition :: VacuumIndex
+    initialPosition = (C1, C1)
+
 
     --only get index if there's dirt
     --TODO this will not always be accurate
-    getNorth :: (VacuumIndex, World) -> Maybe VacuumIndex
-    getNorth ((C0, i), w) = Nothing
-    getNorth ((C1, i), w) =
+    getNorthDirt :: (VacuumIndex, World) -> Maybe VacuumIndex
+    getNorthDirt ((C0, i), w) = Nothing
+    getNorthDirt ((C1, i), w) =
         case indexWorld ((C0, i), w) of
             Just Dirt -> Just (C0, i)
             Nothing -> Nothing
-    getNorth ((C2, i), w) =
+    getNorthDirt ((C2, i), w) =
         case indexWorld ((C1, i), w) of
             Just Dirt -> Just (C1, i)
             Nothing -> Nothing
 
-    getEast :: (VacuumIndex, World) -> Maybe VacuumIndex
-    getEast ((i, C0), w) =
+    getEastDirt :: (VacuumIndex, World) -> Maybe VacuumIndex
+    getEastDirt ((i, C0), w) =
         case indexWorld ((i, C1), w) of
             Just Dirt -> Just (i, C1)
             Nothing -> Nothing
-    getEast ((i, C1), w) =
+    getEastDirt ((i, C1), w) =
         case indexWorld ((i, C2), w) of
             Just Dirt -> Just (i, C2)
             Nothing -> Nothing
-    getEast ((i, C2), w) = Nothing
+    getEastDirt ((i, C2), w) = Nothing
 
-    getSouth :: (VacuumIndex, World) -> Maybe VacuumIndex
-    getSouth ((C0, i), w) =
+    getSouthDirt :: (VacuumIndex, World) -> Maybe VacuumIndex
+    getSouthDirt ((C0, i), w) =
         case indexWorld ((C1, i), w) of
             Just Dirt -> Just (C1, i)
             Nothing -> Nothing
-    getSouth ((C1, i), w) =
+    getSouthDirt ((C1, i), w) =
         case indexWorld ((C2, i), w) of
             Just Dirt -> Just (C2, i)
             Nothing -> Nothing
-    getSouth ((C2, i), w) = Nothing
+    getSouthDirt ((C2, i), w) = Nothing
 
-    getWest :: (VacuumIndex, World) -> Maybe VacuumIndex
-    getWest ((i, C0), w) = Nothing
-    getWest ((i, C1), w) =
+    getWestDirt :: (VacuumIndex, World) -> Maybe VacuumIndex
+    getWestDirt ((i, C0), w) = Nothing
+    getWestDirt ((i, C1), w) =
         case indexWorld ((i, C0), w) of
             Just Dirt -> Just (i, C0)
             Nothing -> Nothing
-    getWest ((i, C2), w) =
+    getWestDirt ((i, C2), w) =
         case indexWorld ((i, C1), w) of
             Just Dirt -> Just (i, C1)
             Nothing -> Nothing
 
     -- checks if the coords fed in are valid. if they are that means dirt
         -- this should be called on results of checkAdj
-    checkedForDirt :: [Maybe VacuumIndex] -> [VacuumIndex]
-    checkedForDirt [] = []
-    checkedForDirt (Just x : xs) = x : checkedForDirt xs
-    checkedForDirt (Nothing : xs) = checkedForDirt xs
+    makeList :: [Maybe VacuumIndex] -> [VacuumIndex]
+    makeList [] = []
+    makeList (Just x : xs) = x : makeList xs
+    makeList (Nothing : xs) = makeList xs
 
     --how do i know if valid index?
     checkAdjacent :: (VacuumIndex, World) -> [Maybe VacuumIndex]
     checkAdjacent (v, w) =
-        [getNorth (v, w), getEast (v, w), getSouth (v, w), getWest (v, w)]
+        [getNorthDirt (v, w), getEastDirt (v, w), getSouthDirt (v, w), getWestDirt (v, w)]
 
     cleanCurrentIfDirt :: (VacuumIndex, World) -> World
     cleanCurrentIfDirt  (v, w) =
@@ -140,10 +147,19 @@ module Vacuum where
             Just Dirt -> cleanSquare (v, w)
             Nothing -> w
 
+    --instead of cleanCurrentIfDirt
+    currentHasDirt :: (VacuumIndex, World) -> Bool
+    currentHasDirt (v, w)= 
+        case indexWorld (v, w) of
+            Just Dirt -> True
+            Nothing -> False 
+
+
 
     --if no surrounding indexes have dirt, return the current index
     chooseMoveBasic :: (VacuumIndex, World) -> VacuumIndex
-    chooseMoveBasic (v, w) = getFromList v (checkedForDirt (checkAdjacent (v, w)))
+    chooseMoveBasic (v, w) =
+        getFromList v (makeList (checkAdjacent (v, w)))
 
     getFromList :: VacuumIndex -> [VacuumIndex] -> VacuumIndex
     getFromList v l =
@@ -152,15 +168,59 @@ module Vacuum where
         else
             head l
 
+    moveNorth :: VacuumIndex -> Maybe VacuumIndex
+    moveNorth (C0, i) = Nothing
+    moveNorth (C1, i) = Just (C0, i)
+    moveNorth (C2, i) = Just (C1, i)
+
+    moveEast :: VacuumIndex -> Maybe VacuumIndex
+    moveEast (i, C0) = Just (i, C1)
+    moveEast (i, C1) = Just (i, C2)
+    moveEast (i, C2) = Nothing
+
+    moveSouth :: VacuumIndex -> Maybe VacuumIndex
+    moveSouth (C0, i) = Just (C1, i)
+    moveSouth (C1, i) = Just (C2, i)
+    moveSouth (C2, i) = Nothing
+
+    moveWest :: VacuumIndex -> Maybe VacuumIndex
+    moveWest (i, C0) = Nothing
+    moveWest (i, C1) = Just (i, C0)
+    moveWest (i, C2) = Just (i, C1)
+
     {--
     moveIndex :: (VacuumIndex, World) -> VacuumIndex
     moveIndex (v, w) = undefined
 
     robotMove :: (VacuumIndex, World) -> VacuumIndex
-    robotMove (v, w) = moveIndex (chooseMoveBasic (v, w), w)
 
-    ^^ don't need, choose move already checked for validity to just assign it
+    if choosemovebasic returns current index, then randomly choose a move
     --}
+
+    isSameMove :: VacuumIndex -> VacuumIndex -> Bool
+    isSameMove v1 v2 =
+        v1 == v2
+
+
+    --no IO bad
+    getRandomDirection :: Int -> IO Int
+    getRandomDirection len = randomRIO (0, len-1)
+
+    --may not need
+    listDirections :: VacuumIndex -> [VacuumIndex]
+    listDirections v = makeList [moveNorth v, moveEast v, moveSouth v, moveWest v]
+
+    --nope
+    {--
+    chooseMoveRandom :: VacuumIndex -> IO VacuumIndex
+    chooseMoveRandom v = do
+        i <- getRandomDirection (length (listDirections v))
+        pure (listDirections v !! i)
+        --}
+
+    robotMove :: (VacuumIndex, World) -> VacuumIndex
+    robotMove (v, w) = chooseMoveBasic (v, w)
+
 
 
 
