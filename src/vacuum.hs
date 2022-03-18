@@ -31,16 +31,6 @@ module Vacuum where
          (Nothing, Nothing, Nothing)
         )
 
-    {- TODO
-    createRandomList :: Int -> [IO Int]
-    createRandomList x = do
-        case x of
-            0 -> []
-        -- return 1 or 0 : result from rec call
-        -}
-
-
-
     initialWorld :: World
     initialWorld  =
         World
@@ -188,35 +178,18 @@ module Vacuum where
     moveWest (i, C1) = Just (i, C0)
     moveWest (i, C2) = Just (i, C1)
 
-    {--
-    moveIndex :: (VacuumIndex, World) -> VacuumIndex
-    moveIndex (v, w) = undefined
-
-    robotMove :: (VacuumIndex, World) -> VacuumIndex
-
-    if choosemovebasic returns current index, then randomly choose a move
-    --}
 
     isSameMove :: VacuumIndex -> VacuumIndex -> Bool
     isSameMove v1 v2 =
         v1 == v2
 
 
-    --no IO bad
-    getRandomDirection :: Int -> IO Int
-    getRandomDirection len = randomRIO (0, len-1)
-
-    --may not need
     listDirections :: VacuumIndex -> [VacuumIndex]
     listDirections v = makeList [moveNorth v, moveEast v, moveSouth v, moveWest v]
 
-    --nope
-    {--
-    chooseMoveRandom :: VacuumIndex -> IO VacuumIndex
-    chooseMoveRandom v = do
-        i <- getRandomDirection (length (listDirections v))
-        pure (listDirections v !! i)
-        --}
+    chooseMoveRandom :: VacuumIndex -> Int -> VacuumIndex
+    chooseMoveRandom v i = 
+        listDirections v !! i
 
     robotMove :: (VacuumIndex, World) -> VacuumIndex
     robotMove (v, w) = chooseMoveBasic (v, w)
