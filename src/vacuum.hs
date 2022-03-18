@@ -2,7 +2,7 @@
 {-# HLINT ignore "Replace case with fromMaybe" #-}
 module Vacuum where
 
-    import System.Random (randomRIO)
+    --Setting up the World
 
     data Square where
         Dirt :: Square
@@ -49,6 +49,10 @@ module Vacuum where
     indexRow (C0, (x0, x1, x2)) = x0
     indexRow (C1, (x0, x1, x2)) = x1
     indexRow (C2, (x0, x1, x2)) = x2
+    --end World setup
+
+    
+    --Functions for removing dirt from a square
 
     cleanInLine :: (RowIndex, Row) -> Row
     cleanInLine (C0, (x0, x1, x2)) = (Nothing, x1, x2)
@@ -66,15 +70,17 @@ module Vacuum where
     cleanSquare ((C0, i), World(r0, r1, r2)) = World (cleanInLine (i, r0), r1, r2)
     cleanSquare ((C1, i), World(r0, r1, r2)) = World (r0, cleanInLine (i, r1), r2)
     cleanSquare ((C2, i), World(r0, r1, r2)) = World (r0, r1, cleanInLine (i, r2))
+    -- end removing dirt from square
 
+    
+    --Vacuum robot functionality from here on
     type VacuumIndex = (RowIndex, RowIndex)
 
     initialPosition :: VacuumIndex
     initialPosition = (C1, C1)
 
+    --only get Just index if there's dirt, for all directions
 
-    --only get index if there's dirt
-    --TODO this will not always be accurate
     getNorthDirt :: (VacuumIndex, World) -> Maybe VacuumIndex
     getNorthDirt ((C0, i), w) = Nothing
     getNorthDirt ((C1, i), w) =
@@ -119,25 +125,28 @@ module Vacuum where
             Just Dirt -> Just (i, C1)
             Nothing -> Nothing
 
-    -- checks if the coords fed in are valid. if they are that means dirt
-        -- this should be called on results of checkAdj
+
+    -- checks if the coordinates fed in are valid. if they are that means dirt is there
+        -- this is called on results of checkAdjacent
     makeList :: [Maybe VacuumIndex] -> [VacuumIndex]
     makeList [] = []
     makeList (Just x : xs) = x : makeList xs
     makeList (Nothing : xs) = makeList xs
 
-    --how do i know if valid index?
+    --Make a list of the adjacent squares, returning a Maybe with Nothing
+    -- if no dirt is on that square, or Just the coordinates if there is dirt there
     checkAdjacent :: (VacuumIndex, World) -> [Maybe VacuumIndex]
     checkAdjacent (v, w) =
         [getNorthDirt (v, w), getEastDirt (v, w), getSouthDirt (v, w), getWestDirt (v, w)]
 
+    --currently unused
     cleanCurrentIfDirt :: (VacuumIndex, World) -> World
     cleanCurrentIfDirt  (v, w) =
         case indexWorld (v, w) of
             Just Dirt -> cleanSquare (v, w)
             Nothing -> w
 
-    --instead of cleanCurrentIfDirt
+    --Used instead of cleanCurrentIfDirt
     currentHasDirt :: (VacuumIndex, World) -> Bool
     currentHasDirt (v, w)= 
         case indexWorld (v, w) of
@@ -151,12 +160,16 @@ module Vacuum where
     chooseMoveBasic (v, w) =
         getFromList v (makeList (checkAdjacent (v, w)))
 
+    --Return the first item in a list 
+    -- if list is null, return the index it was called with
     getFromList :: VacuumIndex -> [VacuumIndex] -> VacuumIndex
     getFromList v l =
         if null l then
             v
         else
             head l
+
+    --The move functions return a new VacuumIndex if the move is possible
 
     moveNorth :: VacuumIndex -> Maybe VacuumIndex
     moveNorth (C0, i) = Nothing
@@ -177,20 +190,26 @@ module Vacuum where
     moveWest (i, C0) = Nothing
     moveWest (i, C1) = Just (i, C0)
     moveWest (i, C2) = Just (i, C1)
+    --end move functions
 
 
+    --Check if two indexes are the same
     isSameMove :: VacuumIndex -> VacuumIndex -> Bool
     isSameMove v1 v2 =
         v1 == v2
 
 
+    --Return a list of legal directions to move in
     listDirections :: VacuumIndex -> [VacuumIndex]
     listDirections v = makeList [moveNorth v, moveEast v, moveSouth v, moveWest v]
 
+    --Return a random legal move (called with a random int in Main.hs)
     chooseMoveRandom :: VacuumIndex -> Int -> VacuumIndex
     chooseMoveRandom v i = 
         listDirections v !! i
 
+    --Main movement functionality for the robot
+    -- to be expanded to incorporate chooseMoveRandom
     robotMove :: (VacuumIndex, World) -> VacuumIndex
     robotMove (v, w) = chooseMoveBasic (v, w)
 
