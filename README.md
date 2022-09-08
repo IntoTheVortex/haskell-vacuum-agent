@@ -13,4 +13,4 @@ Once n has decreased to zero, the program will end.
 
 Reflection:
 
-I didn’t get as far as I’d hoped with this project. I haven’t fully internalized the way that Haskell works, and found my usual imperative programming instincts determining how I sought to create this program. The next step for this program is to refactor from less naive, imperative-inspired functions into more ‘Haskellonic’ code and take advantage of higher-order functions. 
+I'm excited about how much I learned about Haskell through this project. I found my usual imperative programming instincts determining how I sought to create this program, and I look forward to getting deeper into functional logic in the future. The next step for this program is to refactor from the imperative-inspired functions into more ‘Haskellonic’ code and take advantage of higher-order functions. 
